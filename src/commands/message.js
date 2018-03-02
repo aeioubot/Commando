@@ -164,7 +164,8 @@ class CommandMessage {
 			const remaining = (throttle.start + (this.command.throttling.duration * 1000) - Date.now()) / 1000;
 			this.client.emit('commandBlocked', this, 'throttling');
 			return this.reply(
-				`You may not use the \`${this.command.name}\` command again for another ${remaining.toFixed(1)} seconds.`
+				// eslint-disable-next-line
+				`You may not use the \`${this.command.name}\` command again for another ${remaining >= 60 ? `${Math.floor(remaining / 60)}m ${Math.floor(remaining % 60)}s` : `${Math.floor(remaining)} seconds`}.`
 			);
 		}
 
