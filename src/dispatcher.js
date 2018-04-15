@@ -73,7 +73,7 @@ class CommandDispatcher {
 	 * });
 	 */
 	addInhibitor(inhibitor) {
-		if(typeof inhibitor !== 'function') throw new TypeError('The inhibitor must be a function.');
+		if(inhibitor.constructor.name !== 'AsyncFunction') throw new TypeError('The inhibitor must be an async function.');
 		if(this.inhibitors.has(inhibitor)) return false;
 		this.inhibitors.add(inhibitor);
 		return true;
@@ -117,7 +117,7 @@ class CommandDispatcher {
 		// Run the command, or reply with an error
 		let responses;
 		if(cmdMsg) {
-			const inhibited = this.inhibit(cmdMsg);
+			const inhibited = await this.inhibit(cmdMsg);
 
 			if(!inhibited) {
 				if(cmdMsg.command) {
@@ -181,18 +181,24 @@ class CommandDispatcher {
 	/**
 	 * Inhibits a command message
 	 * @param {CommandMessage} cmdMsg - Command message to inhibit
-	 * @return {?Array} [reason, ?response]
+	 * @return {Promise<?Array>} [reason, ?response]
 	 * @private
 	 */
 	inhibit(cmdMsg) {
+		const inhibitorPromises = [];
 		for(const inhibitor of this.inhibitors) {
-			const inhibited = inhibitor(cmdMsg);
-			if(inhibited) {
-				this.client.emit('commandBlocked', cmdMsg, inhibited instanceof Array ? inhibited[0] : inhibited);
-				return inhibited instanceof Array ? inhibited : [inhibited, undefined];
-			}
+			inhibitorPromises.push(inhibitor(cmdMsg));
 		}
-		return null;
+		return Promise.all(inhibitorPromises).then(resultsArray => {
+			if(resultsArray.length === 0) return false;
+			for(let i = 0; i < resultsArray.length; i++) {
+				if(resultsArray[i]) {
+					this.client.emit('commandBlocked', cmdMsg, resultsArray[i] instanceof Array ? resultsArray[i][0] : resultsArray[i]);
+					return resultsArray[i] instanceof Array ? resultsArray[i] : [resultsArray[i], undefined];
+				}
+			}
+			return null;
+		});
 	}
 
 	/**
