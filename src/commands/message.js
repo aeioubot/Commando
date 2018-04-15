@@ -134,7 +134,7 @@ class CommandMessage {
 		}
 
 		// Check if the command doesn't have permission to be run
-		let hasPermission = this.command.hasPermission(this) || false;
+		let hasPermission = await this.command.hasPermission(this) || false;
 		if(!hasPermission || typeof hasPermission === 'string') {
 			this.client.emit('commandBlocked', this, 'permission');
 			if(!hasPermission) hasPermission = `You do not have permission to use the \`${this.command.name}\` command.`;
