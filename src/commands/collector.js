@@ -71,7 +71,7 @@ class ArgumentCollector {
 			for(let i = 0; i < this.args.length; i++) {
 				/* eslint-disable no-await-in-loop */
 				const arg = this.args[i];
-				const result = await arg.obtain(msg, arg.infinite ? provided.slice(i) : provided[i], promptLimit);
+				const result = await arg.obtain(msg, arg.infinite ? provided.slice(i) : provided[i], promptLimit, values);
 				results.push(result);
 
 				if(result.cancelled) {

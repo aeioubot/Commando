@@ -116,9 +116,18 @@ class Argument {
 	 * @param {CommandMessage} msg - Message that triggered the command
 	 * @param {string} [value] - Pre-provided value for the argument
 	 * @param {number} [promptLimit=Infinity] - Maximum number of times to prompt for the argument
+	 * @param {Object} [prevArgs] - The previous values from other arguments.
 	 * @return {Promise<ArgumentResult>}
 	 */
-	async obtain(msg, value, promptLimit = Infinity) {
+	async obtain(msg, value, promptLimit = Infinity, prevArgs) {
+		if(!this.default && this.validator && await this.validator(value, msg, this, prevArgs)) {
+			return {
+				value: value === null || value === undefined ? '' : value,
+				cancelled: null,
+				prompts: [],
+				answers: []
+			};
+		}
 		if(!value && this.default !== null) {
 			return {
 				value: this.default,
@@ -132,7 +141,7 @@ class Argument {
 		const wait = this.wait > 0 && this.wait !== Infinity ? this.wait * 1000 : undefined;
 		const prompts = [];
 		const answers = [];
-		let valid = value ? await this.validate(value, msg) : false;
+		let valid = value ? await this.validate(value, msg, prevArgs) : false;
 
 		while(!valid || typeof valid === 'string') {
 			/* eslint-disable no-await-in-loop */
@@ -183,7 +192,7 @@ class Argument {
 				};
 			}
 
-			valid = await this.validate(value, msg);
+			valid = await this.validate(value, msg, prevArgs);
 			/* eslint-enable no-await-in-loop */
 		}
 
@@ -313,10 +322,11 @@ class Argument {
 	 * Checks if a value is valid for the argument
 	 * @param {string} value - Value to check
 	 * @param {CommandMessage} msg - Message that triggered the command
+	 * @param {Object} [prevArgs] - The previous values from other arguments.
 	 * @return {boolean|string|Promise<boolean|string>}
 	 */
-	validate(value, msg) {
-		if(this.validator) return this.validator(value, msg, this);
+	validate(value, msg, prevArgs) {
+		if(this.validator) return this.validator(value, msg, this, prevArgs);
 		return this.type.validate(value, msg, this);
 	}
 
