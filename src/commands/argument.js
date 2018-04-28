@@ -122,7 +122,7 @@ class Argument {
 	async obtain(msg, value, promptLimit = Infinity, prevArgs) {
 		if(!this.default && this.validator && await this.validator(value, msg, this, prevArgs)) {
 			return {
-				value: value === null || value === undefined ? '' : value,
+				value: value === null || value === undefined ? '' : this.parse(value),
 				cancelled: null,
 				prompts: [],
 				answers: []
