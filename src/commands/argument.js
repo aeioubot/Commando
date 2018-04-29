@@ -156,7 +156,7 @@ class Argument {
 
 			// Prompt the user for a new value
 			prompts.push(await msg.reply(stripIndents`
-				${!value ? this.prompt : valid ? valid : `You provided an invalid ${this.label}. Please try again.`}
+				${!value ? this.prompt : valid ? valid : this.reprompt ? this.reprompt : `You provided an invalid ${this.label}. Please try again.`}
 				${oneLine`
 					Respond with \`cancel\` to cancel the command.
 					${wait ? `The command will automatically be cancelled in ${this.wait} seconds.` : ''}
