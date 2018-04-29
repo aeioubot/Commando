@@ -122,7 +122,7 @@ class Argument {
 	async obtain(msg, value, promptLimit = Infinity, prevArgs) {
 		if(!this.default && this.validator && await this.validator(value, msg, this, prevArgs)) {
 			return {
-				value: value === null || value === undefined ? '' : this.parse(value),
+				value: value === null || value === undefined ? '' : this.parse(value, msg, prevArgs),
 				cancelled: null,
 				prompts: [],
 				answers: []
@@ -197,7 +197,7 @@ class Argument {
 		}
 
 		return {
-			value: await this.parse(value, msg),
+			value: await this.parse(value, msg, prevArgs),
 			cancelled: null,
 			prompts,
 			answers
@@ -334,10 +334,11 @@ class Argument {
 	 * Parses a value string into a proper value for the argument
 	 * @param {string} value - Value to parse
 	 * @param {CommandMessage} msg - Message that triggered the command
+	 * @param {Object} [prevArgs] - The previous values from other arguments.
 	 * @return {*|Promise<*>}
 	 */
-	parse(value, msg) {
-		if(this.parser) return this.parser(value, msg, this);
+	parse(value, msg, prevArgs) {
+		if(this.parser) return this.parser(value, msg, this, prevArgs);
 		return this.type.parse(value, msg, this);
 	}
 
