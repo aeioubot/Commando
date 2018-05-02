@@ -262,17 +262,17 @@ class CommandRegistry {
 	 * (enable, disable, reload, list groups)
 	 * @return {CommandRegistry}
 	 */
-	registerDefaultCommands({ help = true, prefix = true, ping = true, eval_ = true, commandState = true } = {}) {
+	registerDefaultCommands({ help = true, prefix = true, ping = true, eval_ = true, commandState = true, reload = true } = {}) {
 		if(help) this.registerCommand(require('./commands/util/help'));
 		if(prefix) this.registerCommand(require('./commands/util/prefix'));
 		if(ping) this.registerCommand(require('./commands/util/ping'));
 		if(eval_) this.registerCommand(require('./commands/util/eval'));
+		if(reload) this.registerCommand(require('./commands/commands/reload'));
 		if(commandState) {
 			this.registerCommands([
 				require('./commands/commands/groups'),
 				require('./commands/commands/enable'),
 				require('./commands/commands/disable'),
-				require('./commands/commands/reload'),
 				require('./commands/commands/load'),
 				require('./commands/commands/unload')
 			]);
