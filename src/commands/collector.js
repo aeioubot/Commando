@@ -40,7 +40,7 @@ class ArgumentCollector {
 		 * Maximum number of times to prompt for a single argument
 		 * @type {number}
 		 */
-		this.promptLimit = promptLimit;
+		this.promptLimit = 2;
 	}
 
 	/**

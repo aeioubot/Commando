@@ -96,7 +96,7 @@ class Argument {
 		 * How long to wait for input (in seconds)
 		 * @type {number}
 		 */
-		this.wait = typeof info.wait !== 'undefined' ? info.wait : 30;
+		this.wait = 0;
 	}
 
 	/**
