@@ -136,7 +136,7 @@ class Argument {
 				answers: []
 			};
 		}
-		if(this.infinite) return this.obtainInfinite(msg, value, promptLimit);
+		if(this.infinite) return this.obtainInfinite(msg, value, promptLimit, prevArgs);
 
 		const wait = this.wait > 0 && this.wait !== Infinity ? this.wait * 1000 : undefined;
 		const prompts = [];
@@ -209,10 +209,11 @@ class Argument {
 	 * @param {CommandMessage} msg - Message that triggered the command
 	 * @param {string[]} [values] - Pre-provided values for the argument
 	 * @param {number} [promptLimit=Infinity] - Maximum number of times to prompt for the argument
+	 * @param {Object} [prevArgs] - The previous values from other arguments.
 	 * @return {Promise<ArgumentResult>}
 	 * @private
 	 */
-	async obtainInfinite(msg, values, promptLimit = Infinity) { // eslint-disable-line complexity
+	async obtainInfinite(msg, values, promptLimit = Infinity, prevArgs) { // eslint-disable-line complexity
 		const wait = this.wait > 0 && this.wait !== Infinity ? this.wait * 1000 : undefined;
 		const results = [];
 		const prompts = [];
@@ -222,7 +223,7 @@ class Argument {
 		while(true) { // eslint-disable-line no-constant-condition
 			/* eslint-disable no-await-in-loop */
 			let value = values && values[currentVal] ? values[currentVal] : null;
-			let valid = value ? await this.validate(value, msg) : false;
+			let valid = value ? await this.validate(value, msg, prevArgs) : false;
 			let attempts = 0;
 
 			while(!valid || typeof valid === 'string') {
@@ -298,7 +299,7 @@ class Argument {
 					};
 				}
 
-				valid = await this.validate(value, msg);
+				valid = await this.validate(value, msg, prevArgs);
 			}
 
 			results.push(await this.parse(value, msg));

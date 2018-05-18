@@ -2,6 +2,30 @@ const { stripIndents, oneLine } = require('common-tags');
 const Command = require('../base');
 const disambiguation = require('../../util').disambiguation;
 
+function getTotalLength(arr) {
+	let tot = 0;
+	if(arr.length === 0) return 0;
+	for(let str of arr) {
+		tot += str.length;
+	}
+	return tot;
+}
+
+function getUnder2kMessages(array) {
+	const toReturn = [];
+	while(array.length !== 0) {
+		const current = [];
+		while(getTotalLength(current) < 2000 && array[0] !== undefined) {
+			current.push(array.splice(0, 1)[0]);
+		}
+		if(getTotalLength(current) > 2000) {
+			array.unshift(current.pop());
+		}
+		toReturn.push(current.join(''));
+	}
+	return toReturn;
+}
+
 module.exports = class HelpCommand extends Command {
 	constructor(client) {
 		super(client, {
@@ -16,20 +40,18 @@ module.exports = class HelpCommand extends Command {
 			`,
 			examples: ['help', 'help prefix'],
 			guarded: true,
-
 			args: [
 				{
 					key: 'command',
 					prompt: 'Which command would you like to view the help for?',
 					type: 'string',
-					default: ''
-				}
-			]
+					default: '',
+				},
+			],
 		});
 	}
 
 	async run(msg, args) { // eslint-disable-line complexity
-		const groups = this.client.registry.groups;
 		const commands = this.client.registry.findCommands(args.command, false, msg);
 		const showAll = args.command && args.command.toLowerCase() === 'all';
 		if(args.command && !showAll) {
@@ -68,35 +90,39 @@ module.exports = class HelpCommand extends Command {
 				);
 			}
 		} else {
-			const messages = [];
 			try {
-				messages.push(await msg.direct(stripIndents`
-					${oneLine`
-						To run a command in ${msg.guild || 'any server'},
-						use ${Command.usage('command', msg.guild ? msg.guild.commandPrefix : null, this.client.user)}.
-						For example, ${Command.usage('prefix', msg.guild ? msg.guild.commandPrefix : null, this.client.user)}.
-					`}
-					To run a command in this DM, simply use ${Command.usage('command', null, null)} with no prefix.
+				const allGroups = [
+					/* eslint-disable */
+					stripIndents`
+					To run a command in ${msg.guild ? `**${msg.guild}**` : 'any server'}, use the prefix \`${msg.guild ? msg.guild.commandPrefix : `@${this.client.user.tag}`}\`.
+					For example, \`${msg.guild ? `${msg.guild.commandPrefix}help` : `@${this.client.user.tag} help`}\`.
+					
+					To run a command in this DM, simply say the command with no prefix.
 
-					Use ${this.usage('<command>', null, null)} to view detailed information about a specific command.
-					Use ${this.usage('all', null, null)} to view a list of *all* commands, not just available ones.
-
-					__**${showAll ? 'All commands' : `Available commands in ${msg.guild || 'this DM'}`}**__
-
-					${(showAll ? groups : groups.filter(grp => grp.commands.some(cmd => cmd.isUsable(msg))))
-						.map(grp => stripIndents`
-							__${grp.name}__
-							${(showAll ? grp.commands : grp.commands.filter(cmd => cmd.isUsable(msg)))
-								.map(cmd => `**${cmd.name}:** ${cmd.description}`).join('\n')
-							}
-						`).join('\n\n')
+					Use ${this.usage('<command>', null, null)} in this DM to view detailed information about a specific command.
+					`,
+					/* eslint-enable */
+				];
+				for(let group of this.client.registry.groups) {
+					group = group[1];
+					if(['utility', 'owner commands', 'commands'].includes(group.name.toLowerCase())) continue;
+					let thisGroup = ['```md', `#===${group.name.toUpperCase()}===#\n`];
+					for(let command of group.commands) {
+						command = command[1];
+						thisGroup.push(`${`<${command.name.toUpperCase()}>`.padEnd(10)} // ${command.description}`);
 					}
-				`, { split: true }));
-				if(msg.channel.type !== 'dm') messages.push(await msg.reply('Sent you a DM with information.'));
+					thisGroup.push('```');
+					allGroups.push(thisGroup.join('\n'));
+				}
+				const toSends = getUnder2kMessages(allGroups);
+				for(let compliants of toSends) {
+					// eslint-disable-next-line
+					await msg.direct(compliants);
+				}
+				return undefined;
 			} catch(err) {
-				messages.push(await msg.reply('Unable to send you the help DM. You probably have DMs disabled.'));
+				return msg.reply('Unable to send you the help DM. You probably have DMs disabled.');
 			}
-			return messages;
 		}
 	}
 };
