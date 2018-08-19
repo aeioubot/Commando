@@ -8,6 +8,7 @@
 		"ecmaVersion": 2017
 	},
 	"rules": {
+		"no-console": "off",
 		"no-await-in-loop": "warn",
 		"no-compare-neg-zero": "error",
 		"no-extra-parens": ["warn", "all", {

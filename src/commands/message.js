@@ -198,6 +198,7 @@ class CommandMessage {
 		const typingCount = this.message.channel.typingCount;
 		try {
 			this.client.emit('debug', `Running command ${this.command.groupID}:${this.command.memberName}.`);
+			console.log(`Running command {cyan}${this.command.name}{reset}.`);
 			const promise = this.command.run(this, args, fromPattern);
 			/**
 			 * Emitted when running a command
